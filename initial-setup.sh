@@ -5,19 +5,19 @@
 
 
 # If user with given name does not exist, it will be created and added to sudo group
-export SETUP_USER="" # <- add username here
+export SETUP_USER="" # add username here
 
 # If no ssh key is supplied, ssh password login will be activated for $SETUP_USER
-export SETUP_SSHKEY="" # <- add ssh pubkey here
-
-# Install Docker CE
-export SETUP_INSTALL_DOCKER=true
+export SETUP_SSHKEY="" # add ssh pubkey here
 
 # Disable IPv6
-export SETUP_DISABLE_IPV6=true
+export SETUP_DISABLE_IPV6=true # true / false
 
-# Hardened network settings
-export SETUP_HARDEN_NETWORK=true
+# Harden network settings
+export SETUP_HARDEN_NETWORK=true # true / false
+
+# Install Docker CE
+export SETUP_INSTALL_DOCKER=true # true / false
 
 
 ########
@@ -77,11 +77,14 @@ then
     echo "net.ipv4.conf.all.rp_filter=1"
     echo "net.ipv4.tcp_syncookies=1"
     echo "net.ipv4.conf.all.accept_redirects=0"
-    echo "net.ipv6.conf.all.accept_redirects=0"
     echo "net.ipv4.conf.all.send_redirects=0"
     echo "net.ipv4.conf.all.accept_source_route=0"
-    echo "net.ipv6.conf.all.accept_source_route=0"
     echo "net.ipv4.conf.all.log_martians=1"
+    if [ "$SETUP_DISABLE_IPV6" = false ];
+    then
+      echo "net.ipv6.conf.all.accept_redirects=0"
+      echo "net.ipv6.conf.all.accept_source_route=0"
+    fi
   } >> /etc/sysctl.conf
   sysctl -p
 fi
