@@ -5,15 +5,16 @@
 
 
 # User will be created if not existing
-export SETUP_USER='' # <- add username here
+export SETUP_USER="" # <- add username here
 
 # If no key is supplied, user password will be set at runtime and ssh password login will be activated
-export SETUP_SSHKEY='' # <- add ssh pubkey here
+export SETUP_SSHKEY="" # <- add ssh pubkey here
 
 
 ########
 
 set -e
+
 
 if [ "$EUID" -ne 0 ]
 then
@@ -38,24 +39,8 @@ then
   echo " → NO SSH KEY SUPPLIED, PASSWORD LOGIN WILL BE ENABLED!"
 fi
 
+
 export DEBIAN_FRONTEND=noninteractive
-
-
-# setup admin user
-if id "$SETUP_USER";
-then
-  echo " → User $SETUP_USER already exists"
-else
-  echo " → Adding user $SETUP_USER"
-  adduser --quiet --disabled-password --gecos "" "$SETUP_USER"
-  gpasswd -a "$SETUP_USER" sudo
-  if [ -z "$SETUP_SSHKEY" ];
-  then
-  echo " → Plase specify a password for $SETUP_USER"
-    passwd "$SETUP_USER"
-  fi
-fi
-
 
 # use default apt archive servers
 echo " → Configuring default apt server"
@@ -67,7 +52,6 @@ echo " → Configuring default apt server"
 } > /etc/apt/sources.list
 apt-get -qy update
 
-
 # remove bloat
 echo " → Removing bloat"
 apt-get -qy autoremove --purge cloud-init landscape-common pastebinit popularity-contest snapd
@@ -77,20 +61,17 @@ echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-c
 rm -rf /var/cache/snapd/
 rm -rf /root/snap
 
-
 # update apt packages
 echo " → Updating apt packages"
 apt-get -qy upgrade
-
 
 # set up locales
 echo " → Configuring locales"
 apt-get -qy install language-pack-en-base
 timedatectl set-timezone Europe/Berlin
-export LC_ALL='en_US.UTF-8'
-export LANG='en_US.UTF-8'
+export LC_ALL="en_US.UTF-8"
+export LANG="en_US.UTF-8"
 update-locale LC_ALL="en_GB.UTF-8" LANG="en_GB.UTF-8"
-
 
 # install additional apt packages
 echo " → Installing additional apt packages"
@@ -111,6 +92,7 @@ apt-get -qy install  apt-utils              \
                      nano                   \
                      netcat                 \
                      openssh-server         \
+                     openssl                \
                      rsync                  \
                      screen                 \
                      shellcheck             \
@@ -120,11 +102,23 @@ apt-get -qy install  apt-utils              \
                      unzip                  \
                      wget
 
-
 # clean up apt
 echo " → Cleaning up apt"
 apt-get -qy clean
 apt-get -qy autoremove
+
+
+# add admin user
+if id "$SETUP_USER";
+then
+  echo " → User $SETUP_USER already exists"
+else
+  echo " → Adding user $SETUP_USER"
+  adduser --quiet --disabled-password --gecos "" "$SETUP_USER"
+  gpasswd -a "$SETUP_USER" sudo
+  SETUP_PASS="$(openssl rand -base64 14)"
+  echo "$SETUP_USER:$SETUP_PASS" | chpasswd
+fi
 
 
 # ssh config
@@ -136,7 +130,6 @@ echo " → Configuring ssh"
   echo "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
   echo "HashKnownHosts yes"
 } > /etc/ssh/ssh_config
-
 
 # sshd config
 echo " → Configuring sshd"
@@ -164,7 +157,6 @@ echo " → Configuring sshd"
   echo "    AllowTcpForwarding yes"
 } > /etc/ssh/sshd_config
 
-
 # configure ssh auth
 if [[ -n "$SETUP_SSHKEY" ]];
 then
@@ -184,16 +176,14 @@ else
   } >> /etc/ssh/sshd_config
 fi
 
-
 # generate server keys
 echo " → Deleting old ssh server keys"
 cd /etc/ssh
 shred -u ssh_host_*key*
 echo " → Generating ed25519 ssh server key"
-ssh-keygen -t ed25519 -f ssh_host_ed25519_key -N ''
+ssh-keygen -t ed25519 -f ssh_host_ed25519_key -N ""
 echo " → Generating rsa ssh server key"
-ssh-keygen -t rsa -b 8192 -f ssh_host_rsa_key -N ''
-
+ssh-keygen -t rsa -b 8192 -f ssh_host_rsa_key -N ""
 
 # restart sshd
 echo " → Restarting sshd"
@@ -207,3 +197,8 @@ ufw default deny incoming
 ufw default allow outgoing
 ufw allow ssh/tcp
 ufw --force enable
+
+
+echo "########"
+echo " → Password for $SETUP_USER is: $SETUP_PASS"
+echo "########"
