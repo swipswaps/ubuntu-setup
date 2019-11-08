@@ -10,6 +10,12 @@ export SETUP_USER="" # <- add username here
 # If no key is supplied, user password will be set at runtime and ssh password login will be activated
 export SETUP_SSHKEY="" # <- add ssh pubkey here
 
+# Install Docker CE
+export SETUP_INSTALL_DOCKER=true
+
+# Kernel network settings hardening
+export SETUP_HARDEN_NETWORK=true
+
 
 ########
 
@@ -37,6 +43,26 @@ fi
 if [ -z "$SETUP_SSHKEY" ];
 then
   echo " → NO SSH KEY SUPPLIED, PASSWORD LOGIN WILL BE ENABLED!"
+fi
+
+
+if [ "$SETUP_HARDEN_NETWORK" = true ];
+then
+  # Set kernel network settings
+  echo " → Setting kernel network settings"
+  {
+    echo ""
+    echo "net.ipv4.conf.default.rp_filter=1"
+    echo "net.ipv4.conf.all.rp_filter=1"
+    echo "net.ipv4.tcp_syncookies=1"
+    echo "net.ipv4.conf.all.accept_redirects=0"
+    echo "net.ipv6.conf.all.accept_redirects=0"
+    echo "net.ipv4.conf.all.send_redirects=0"
+    echo "net.ipv4.conf.all.accept_source_route=0"
+    echo "net.ipv6.conf.all.accept_source_route=0"
+    echo "net.ipv4.conf.all.log_martians=1"
+  } >> /etc/sysctl.conf
+  sysctl -p
 fi
 
 
@@ -79,11 +105,12 @@ apt-get -qy purge               \
   popularity-contest            \
   snapd                         \
   telnet
-# disable cloud-init network config
-echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+# clean up cloud-init
+rm -rf /etc/cloud/
+rm -rf /var/lib/cloud/
 # clean up snapd
-rm -rf /var/cache/snapd/
 rm -rf /root/snap
+rm -rf /var/cache/snapd/
 
 # full-update apt packages
 echo " → Updating apt packages"
@@ -124,16 +151,22 @@ apt-get -qy install             \
   vim                           \
   wget
 
-# install docker
-echo " → Installing Docker"
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-apt-get -qy update
-apt-get -qy install docker-ce
-systemctl enable docker
-# enable memory limit and swap accounting
-sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"/g' /etc/default/grub
-update-grub
+SETUP_REQUIRES_REBOOT=false
+
+if [ "$SETUP_INSTALL_DOCKER" = true ];
+then
+  # install docker
+  echo " → Installing Docker"
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+  apt-get -qy update
+  apt-get -qy install docker-ce
+  systemctl enable docker
+  # enable memory limit and swap accounting
+  sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"/g' /etc/default/grub
+  update-grub
+  SETUP_REQUIRES_REBOOT=true
+fi
 
 # clean up apt packages
 echo " → Cleaning up apt packages"
@@ -223,23 +256,6 @@ echo " → Restarting sshd"
 systemctl restart sshd
 
 
-# Set kernel network settings
-echo " → Setting kernel network settings"
-{
-  echo ""
-  echo "net.ipv4.conf.default.rp_filter=1"
-  echo "net.ipv4.conf.all.rp_filter=1"
-  echo "net.ipv4.tcp_syncookies=1"
-  echo "net.ipv4.conf.all.accept_redirects=0"
-  echo "net.ipv6.conf.all.accept_redirects=0"
-  echo "net.ipv4.conf.all.send_redirects=0"
-  echo "net.ipv4.conf.all.accept_source_route=0"
-  echo "net.ipv6.conf.all.accept_source_route=0"
-  echo "net.ipv4.conf.all.log_martians=1"
-} >> /etc/sysctl.conf
-sysctl -p
-
-
 # configure firewall
 echo " → Setting up firewall"
 ufw logging on
@@ -251,5 +267,8 @@ ufw --force enable
 
 echo "########"
 echo " → Password for $SETUP_USER is: $SETUP_PASS"
-echo " → Please reboot the machine for certain changes to take effect!"
+if [ "$SETUP_REQUIRES_REBOOT" = true ];
+then
+  echo " → Please reboot the machine for certain changes to take effect!"
+fi
 echo "########"
