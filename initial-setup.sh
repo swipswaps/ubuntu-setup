@@ -13,7 +13,10 @@ export SETUP_SSHKEY="" # <- add ssh pubkey here
 # Install Docker CE
 export SETUP_INSTALL_DOCKER=true
 
-# Kernel network settings hardening
+# Disable IPv6
+export SETUP_DISABLE_IPV6=true
+
+# Hardened network settings
 export SETUP_HARDEN_NETWORK=true
 
 
@@ -46,10 +49,28 @@ then
 fi
 
 
+SETUP_REQUIRES_REBOOT=false
+
+if [ "$SETUP_DISABLE_IPV6" = true ];
+then
+  # Disable IPv6
+  echo " → Disabling IPv6"
+  echo "/etc/sysctl.d/01-disable-ipv6.conf" > /etc/sysctl.d/01-disable-ipv6.conf
+  {
+    echo ""
+    echo "net.ipv6.conf.all.disable_ipv6=1"
+    echo "net.ipv6.conf.default.disable_ipv6=1"
+    echo "net.ipv6.conf.lo.disable_ipv6=1"
+  } >> /etc/sysctl.conf
+  sysctl -p
+  SETUP_REQUIRES_REBOOT=true
+fi
+
+
 if [ "$SETUP_HARDEN_NETWORK" = true ];
 then
-  # Set kernel network settings
-  echo " → Setting kernel network settings"
+  # Set hardened network settings
+  echo " → Setting hardened network settings"
   {
     echo ""
     echo "net.ipv4.conf.default.rp_filter=1"
@@ -150,8 +171,6 @@ apt-get -qy install             \
   unzip                         \
   vim                           \
   wget
-
-SETUP_REQUIRES_REBOOT=false
 
 if [ "$SETUP_INSTALL_DOCKER" = true ];
 then
