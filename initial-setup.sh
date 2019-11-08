@@ -4,10 +4,10 @@
 ## URL: https://github.com/huebnerf/ubuntu-setup
 
 
-# User will be created if not existing
+# If user with given name does not exist, it will be created and added to sudo group
 export SETUP_USER="" # <- add username here
 
-# If no key is supplied, user password will be set at runtime and ssh password login will be activated
+# If no ssh key is supplied, ssh password login will be activated for $SETUP_USER
 export SETUP_SSHKEY="" # <- add ssh pubkey here
 
 # Install Docker CE
