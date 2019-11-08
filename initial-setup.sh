@@ -205,6 +205,23 @@ echo " → Restarting sshd"
 systemctl restart sshd
 
 
+# Set kernel network settings
+echo " → Setting kernel network settings"
+{
+  echo ""
+  echo "net.ipv4.conf.default.rp_filter=1"
+  echo "net.ipv4.conf.all.rp_filter=1"
+  echo "net.ipv4.tcp_syncookies=1"
+  echo "net.ipv4.conf.all.accept_redirects=0"
+  echo "net.ipv6.conf.all.accept_redirects=0"
+  echo "net.ipv4.conf.all.send_redirects=0"
+  echo "net.ipv4.conf.all.accept_source_route=0"
+  echo "net.ipv6.conf.all.accept_source_route=0"
+  echo "net.ipv4.conf.all.log_martians=1"
+} >> /etc/sysctl.conf
+sysctl -p
+
+
 # configure firewall
 echo " → Setting up firewall"
 ufw logging on
