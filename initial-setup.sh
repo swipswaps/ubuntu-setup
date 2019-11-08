@@ -42,11 +42,9 @@ fi
 
 # disable motd ads
 echo " → Disabling motd ads"
-sed 's/ENABLED=1/ENABLED=0/g' /etc/default/motd-news
+sed -i 's/ENABLED=1/ENABLED=0/g' /etc/default/motd-news
 systemctl disable --now motd-news.timer
 
-
-export DEBIAN_FRONTEND=noninteractive
 
 # use default apt archive servers
 echo " → Configuring default apt server"
@@ -58,6 +56,7 @@ echo " → Configuring default apt server"
 } > /etc/apt/sources.list
 
 # set up locales
+export DEBIAN_FRONTEND=noninteractive
 apt-get -qy update
 echo " → Configuring locales"
 apt-get -qy install language-pack-en-base
@@ -80,7 +79,6 @@ apt-get -qy purge               \
   popularity-contest            \
   snapd                         \
   telnet
-
 # disable cloud-init network config
 echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 # clean up snapd
@@ -132,6 +130,10 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
 apt-get -qy update
 apt-get -qy install docker-ce
+systemctl enable docker
+# enable memory limit and swap accounting
+sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"/g' /etc/default/grub
+update-grub
 
 # clean up apt packages
 echo " → Cleaning up apt packages"
@@ -249,4 +251,5 @@ ufw --force enable
 
 echo "########"
 echo " → Password for $SETUP_USER is: $SETUP_PASS"
+echo " → Please reboot the machine for certain changes to take effect!"
 echo "########"
