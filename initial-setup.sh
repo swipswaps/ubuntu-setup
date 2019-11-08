@@ -40,6 +40,12 @@ then
 fi
 
 
+# disable motd ads
+echo " → Disabling motd ads"
+sed 's/ENABLED=1/ENABLED=0/g' /etc/default/motd-news
+systemctl disable --now motd-news.timer
+
+
 export DEBIAN_FRONTEND=noninteractive
 
 # use default apt archive servers
