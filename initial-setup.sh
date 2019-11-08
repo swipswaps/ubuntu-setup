@@ -50,22 +50,9 @@ echo " → Configuring default apt server"
   echo "deb http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse"
   echo "deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse"
 } > /etc/apt/sources.list
-apt-get -qy update
-
-# remove bloat
-echo " → Removing bloat"
-apt-get -qy autoremove --purge cloud-init landscape-common pastebinit popularity-contest snapd
-# cloud-init
-echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
-# snapd
-rm -rf /var/cache/snapd/
-rm -rf /root/snap
-
-# update apt packages
-echo " → Updating apt packages"
-apt-get -qy upgrade
 
 # set up locales
+apt-get -qy update
 echo " → Configuring locales"
 apt-get -qy install language-pack-en-base
 timedatectl set-timezone Europe/Berlin
@@ -73,39 +60,67 @@ export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 update-locale LC_ALL="en_GB.UTF-8" LANG="en_GB.UTF-8"
 
+# remove bloat
+echo " → Removing bloat"
+apt-get -qy purge               \
+  apport                        \
+  apport-symptoms               \
+  cloud-guest-utils             \
+  cloud-init                    \
+  cloud-initramfs-copymods      \
+  cloud-initramfs-dyn-netconf   \
+  landscape-common              \
+  pastebinit                    \
+  popularity-contest            \
+  snapd                         \
+  telnet
+
+# disable cloud-init network config
+echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+# clean up snapd
+rm -rf /var/cache/snapd/
+rm -rf /root/snap
+
+# full-update apt packages
+echo " → Updating apt packages"
+apt-get -qy full-upgrade
+
 # install additional apt packages
 echo " → Installing additional apt packages"
-apt-get -qy install  apt-utils              \
-                     autoconf               \
-                     automake               \
-                     build-essential        \
-                     checkinstall           \
-                     clang                  \
-                     curl                   \
-                     fail2ban               \
-                     git                    \
-                     gnupg2                 \
-                     htop                   \
-                     iftop                  \
-                     make                   \
-                     man                    \
-                     nano                   \
-                     netcat                 \
-                     openssh-server         \
-                     openssl                \
-                     rsync                  \
-                     screen                 \
-                     shellcheck             \
-                     tldr                   \
-                     tree                   \
-                     ufw                    \
-                     unzip                  \
-                     wget
+apt-get -qy install             \
+  apt-utils                     \
+  autoconf                      \
+  automake                      \
+  build-essential               \
+  checkinstall                  \
+  clang                         \
+  curl                          \
+  fail2ban                      \
+  git                           \
+  gnupg2                        \
+  htop                          \
+  iftop                         \
+  make                          \
+  man                           \
+  nano                          \
+  netcat                        \
+  openssh-server                \
+  openssl                       \
+  rsync                         \
+  screen                        \
+  shellcheck                    \
+  tldr                          \
+  tree                          \
+  ufw                           \
+  unattended-upgrades           \
+  unzip                         \
+  vim                           \
+  wget
 
-# clean up apt
-echo " → Cleaning up apt"
-apt-get -qy clean
+# clean up apt packages
+echo " → Cleaning up apt packages"
 apt-get -qy autoremove
+apt-get -qy clean
 
 
 # add admin user
