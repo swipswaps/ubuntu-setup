@@ -177,6 +177,8 @@ apt-get -qy autoremove
 apt-get -qy clean
 
 
+SETUP_PRINT_PASSWORD=false
+
 # add admin user
 if id "$SETUP_USER";
 then
@@ -187,6 +189,7 @@ else
   gpasswd -a "$SETUP_USER" sudo
   SETUP_PASS="$(openssl rand -base64 14)"
   echo "$SETUP_USER:$SETUP_PASS" | chpasswd
+  SETUP_PRINT_PASSWORD=true
 fi
 
 
@@ -269,9 +272,13 @@ ufw --force enable
 
 
 echo "########"
-echo " → Password for $SETUP_USER is: $SETUP_PASS"
+if [ "$SETUP_PRINT_PASSWORD" = true ];
+then
+  echo " → Password for $SETUP_USER is: $SETUP_PASS"
+fi
 if [ "$SETUP_REQUIRES_REBOOT" = true ];
 then
   echo " → Please reboot the machine for certain changes to take effect!"
 fi
+echo "Script finished!"
 echo "########"
