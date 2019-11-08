@@ -87,6 +87,15 @@ then
 fi
 
 
+# configure firewall
+echo " → Setting up firewall"
+ufw logging on
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh/tcp
+ufw --force enable
+
+
 # disable motd ads
 echo " → Disabling motd ads"
 sed -i 's/ENABLED=1/ENABLED=0/g' /etc/default/motd-news
@@ -281,15 +290,6 @@ echo " → Restarting sshd"
 systemctl restart sshd
 
 
-# configure firewall
-echo " → Setting up firewall"
-ufw logging on
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow ssh/tcp
-ufw --force enable
-
-
 echo "########"
 if [ "$SETUP_PRINT_PASSWORD" = true ];
 then
@@ -299,5 +299,5 @@ if [ "$SETUP_REQUIRES_REBOOT" = true ];
 then
   echo " → Please reboot the machine for certain changes to take effect!"
 fi
-echo "Script finished!"
+echo " → Script finished!"
 echo "########"
