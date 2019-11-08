@@ -88,10 +88,12 @@ apt-get -qy full-upgrade
 # install additional apt packages
 echo " → Installing additional apt packages"
 apt-get -qy install             \
+  apt-transport-https           \
   apt-utils                     \
   autoconf                      \
   automake                      \
   build-essential               \
+  ca-certificates               \
   checkinstall                  \
   clang                         \
   curl                          \
@@ -109,6 +111,7 @@ apt-get -qy install             \
   rsync                         \
   screen                        \
   shellcheck                    \
+  software-properties-common    \
   tldr                          \
   tree                          \
   ufw                           \
@@ -116,6 +119,13 @@ apt-get -qy install             \
   unzip                         \
   vim                           \
   wget
+
+# install docker
+echo " → Installing Docker"
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+apt-get -qy update
+apt-get -qy install docker-ce
 
 # clean up apt packages
 echo " → Cleaning up apt packages"
