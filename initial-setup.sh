@@ -5,7 +5,7 @@
 
 
 # If user with given name does not exist, it will be created and added to sudo group
-export SETUP_USER="" # add username here
+export SETUP_USER="" # add username here (mandatory)
 
 # If no ssh key is supplied, ssh password login will be activated for $SETUP_USER
 export SETUP_SSHKEY="" # add ssh pubkey here
@@ -22,8 +22,8 @@ export SETUP_INSTALL_DOCKER=true # true / false
 
 ########
 
+# exit on error
 set -e
-
 
 if [ "$EUID" -ne 0 ]
 then
@@ -54,7 +54,7 @@ SETUP_REQUIRES_REBOOT=false
 
 if [ "$SETUP_DISABLE_IPV6" = true ];
 then
-  # Disable IPv6
+  # disable ipv6
   echo " → Disabling IPv6"
   echo "/etc/sysctl.d/01-disable-ipv6.conf" > /etc/sysctl.d/01-disable-ipv6.conf
   {
@@ -70,7 +70,7 @@ fi
 
 if [ "$SETUP_HARDEN_NETWORK" = true ];
 then
-  # Set hardened network settings
+  # set hardened network settings
   echo " → Setting hardened network settings"
   {
     echo ""
@@ -222,11 +222,11 @@ apt-get -qy clean
 
 SETUP_PRINT_PASSWORD=false
 
-# add admin user
 if id "$SETUP_USER";
 then
   echo " → User $SETUP_USER already exists"
 else
+  # add admin user
   echo " → Adding user $SETUP_USER"
   adduser --quiet --disabled-password --gecos "" "$SETUP_USER"
   gpasswd -a "$SETUP_USER" sudo
