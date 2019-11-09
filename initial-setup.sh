@@ -51,6 +51,7 @@ fi
 
 SETUP_REQUIRES_REBOOT=false
 
+
 if [ "$SETUP_DISABLE_IPV6" = true ];
 then
   # Disable IPv6
@@ -87,15 +88,6 @@ then
 fi
 
 
-# configure firewall
-echo " → Setting up firewall"
-ufw logging on
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow ssh/tcp
-ufw --force enable
-
-
 # disable motd ads
 echo " → Disabling motd ads"
 sed -i 's/ENABLED=1/ENABLED=0/g' /etc/default/motd-news
@@ -111,6 +103,7 @@ echo " → Configuring default apt server"
   echo "deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse"
 } > /etc/apt/sources.list
 
+
 # set up locales
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qy update
@@ -120,6 +113,7 @@ timedatectl set-timezone Europe/Berlin
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 update-locale LC_ALL="en_GB.UTF-8" LANG="en_GB.UTF-8"
+
 
 # remove bloat
 echo " → Removing bloat"
@@ -142,9 +136,11 @@ rm -rf /var/lib/cloud/
 rm -rf /root/snap
 rm -rf /var/cache/snapd/
 
+
 # full-update apt packages
 echo " → Updating apt packages"
 apt-get -qy full-upgrade
+
 
 # install additional apt packages
 echo " → Installing additional apt packages"
@@ -181,6 +177,21 @@ apt-get -qy install             \
   vim                           \
   wget
 
+
+# configure firewall
+echo " → Setting up firewall"
+if [ "$SETUP_DISABLE_IPV6" = true ];
+then
+  echo "IPV6=no" >> /etc/ufw/ufw.conf
+  systemctl restart ufw
+fi
+ufw logging on
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh/tcp
+ufw --force enable
+
+
 if [ "$SETUP_INSTALL_DOCKER" = true ];
 then
   # install docker
@@ -198,6 +209,7 @@ then
   curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
 fi
+
 
 # clean up apt packages
 echo " → Cleaning up apt packages"
