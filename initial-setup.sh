@@ -56,7 +56,6 @@ if [ "$SETUP_DISABLE_IPV6" = true ];
 then
   # disable ipv6
   echo " → Disabling IPv6"
-  echo "/etc/sysctl.d/01-disable-ipv6.conf" > /etc/sysctl.d/01-disable-ipv6.conf
   {
     echo ""
     echo "net.ipv6.conf.all.disable_ipv6=1"
@@ -185,7 +184,10 @@ apt-get -qy install             \
 echo " → Setting up firewall"
 if [ "$SETUP_DISABLE_IPV6" = true ];
 then
-  echo "IPV6=no" >> /etc/ufw/ufw.conf
+  {
+    echo ""
+    echo "IPV6=no"
+  } >> /etc/ufw/ufw.conf
   systemctl restart ufw
 fi
 ufw logging on
