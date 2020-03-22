@@ -167,6 +167,7 @@ apt-get -qy install             \
   netcat                        \
   openssh-server                \
   openssl                       \
+  python3-setuptools            \
   rsync                         \
   screen                        \
   shellcheck                    \
@@ -210,8 +211,8 @@ then
   sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"/g' /etc/default/grub
   update-grub
   SETUP_REQUIRES_REBOOT=true
-  # install docker-compose 1.24.1
-  curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  # install docker-compose 1.25.4
+  curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
 fi
 
