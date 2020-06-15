@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## DESCRIPTION: Initial configuration for Ubuntu Server 20.04 LTS Focal Fossa
+## DESCRIPTION: Initial configuration for Ubuntu Server 20.04 Focal Fossa
 ## AUTHOR: Florian Hübner (fhuebner@posteo.de)
 ## URL: https://github.com/huebnerf/ubuntu-setup
 
@@ -11,13 +11,13 @@ export SETUP_USER="" # add username here (mandatory)
 export SETUP_SSHKEY="" # add ssh pubkey here
 
 # Disable IPv6
-export SETUP_DISABLE_IPV6=true # true / false
+export SETUP_DISABLE_IPV6=true
 
 # Harden network settings
-export SETUP_HARDEN_NETWORK=true # true / false
+export SETUP_HARDEN_NETWORK=true
 
 # Install Docker CE
-export SETUP_INSTALL_DOCKER=true # true / false
+export SETUP_INSTALL_DOCKER=true
 
 
 ########
@@ -33,19 +33,19 @@ fi
 
 if ! grep -q DISTRIB_CODENAME=focal /etc/lsb-release;
 then
-  echo " → This script is intended to be run on Ubuntu Server 20.04 LTS Focal Fossa!";
+  echo " → This script is intended to be run on Ubuntu Server 20.04 Focal Fossa!";
   exit;
 fi
 
 if [ -z "$SETUP_USER" ];
 then
-  echo " → Please supply a username at SETUP_USER!"
+  echo " → Please supply a username!"
   exit;
 fi
 
 if [ -z "$SETUP_SSHKEY" ];
 then
-  echo " → NO SSH KEY SUPPLIED, PASSWORD LOGIN WILL BE ENABLED!"
+  echo " → NO SSH KEY SUPPLIED, SSH PASSWORD AUTHENTICATION WILL BE ENABLED!"
 fi
 
 
