@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-## DESCRIPTION: Initial configuration for Ubuntu Server 18.04
+## DESCRIPTION: Initial configuration for Ubuntu Server 20.04 LTS Focal Fossa
 ## AUTHOR: Florian Hübner (fhuebner@posteo.de)
 ## URL: https://github.com/huebnerf/ubuntu-setup
 
@@ -31,9 +31,9 @@ then
   exit
 fi
 
-if ! grep -q DISTRIB_CODENAME=bionic /etc/lsb-release;
+if ! grep -q DISTRIB_CODENAME=focal /etc/lsb-release;
 then
-  echo " → This script is intended to be run on Ubuntu 18.04 LTS Bionic Beaver!";
+  echo " → This script is intended to be run on Ubuntu Server 20.04 LTS Focal Fossa!";
   exit;
 fi
 
@@ -51,13 +51,13 @@ fi
 
 SETUP_REQUIRES_REBOOT=false
 
-
 if [ "$SETUP_DISABLE_IPV6" = true ];
 then
   # disable ipv6
   echo " → Disabling IPv6"
   {
     echo ""
+	echo "#disable ipv6"
     echo "net.ipv6.conf.all.disable_ipv6=1"
     echo "net.ipv6.conf.default.disable_ipv6=1"
     echo "net.ipv6.conf.lo.disable_ipv6=1"
@@ -70,9 +70,10 @@ fi
 if [ "$SETUP_HARDEN_NETWORK" = true ];
 then
   # set hardened network settings
-  echo " → Setting hardened network settings"
+  echo " → Hardening network settings"
   {
     echo ""
+	echo "#harden network"
     echo "net.ipv4.conf.default.rp_filter=1"
     echo "net.ipv4.conf.all.rp_filter=1"
     echo "net.ipv4.tcp_syncookies=1"
@@ -99,10 +100,10 @@ systemctl disable --now motd-news.timer
 # use default apt archive servers
 echo " → Configuring default apt server"
 {
-  echo "deb http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse"
-  echo "deb http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse"
-  echo "deb http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse"
-  echo "deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse"
+  echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse"
+  echo "deb http://archive.ubuntu.com/ubuntu focal-updates main restricted universe multiverse"
+  echo "deb http://archive.ubuntu.com/ubuntu focal-security main restricted universe multiverse"
+  echo "deb http://archive.ubuntu.com/ubuntu focal-backports main restricted universe multiverse"
 } > /etc/apt/sources.list
 
 
@@ -110,11 +111,10 @@ echo " → Configuring default apt server"
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qy update
 echo " → Configuring locales"
-apt-get -qy install language-pack-en-base
+apt-get -qy install language-pack-en-base language-pack-en
+localectl set-locale LANG=en_US.UTF-8
+echo " → Configuring timezone"
 timedatectl set-timezone Europe/Berlin
-export LC_ALL="en_US.UTF-8"
-export LANG="en_US.UTF-8"
-update-locale LC_ALL="en_GB.UTF-8" LANG="en_GB.UTF-8"
 
 
 # remove bloat
@@ -131,6 +131,8 @@ apt-get -qy purge               \
   popularity-contest            \
   snapd                         \
   telnet
+# reloading systemd daemon
+systemctl daemon-reload
 # clean up cloud-init
 rm -rf /etc/cloud/
 rm -rf /var/lib/cloud/
@@ -149,25 +151,17 @@ echo " → Installing additional apt packages"
 apt-get -qy install             \
   apt-transport-https           \
   apt-utils                     \
-  autoconf                      \
-  automake                      \
-  build-essential               \
   ca-certificates               \
-  checkinstall                  \
-  clang                         \
   curl                          \
   fail2ban                      \
   git                           \
-  gnupg2                        \
   htop                          \
   iftop                         \
-  make                          \
   man                           \
   nano                          \
   netcat                        \
   openssh-server                \
   openssl                       \
-  python3-setuptools            \
   rsync                         \
   screen                        \
   shellcheck                    \
@@ -203,9 +197,9 @@ then
   # install docker
   echo " → Installing Docker"
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
   apt-get -qy update
-  apt-get -qy install docker-ce
+  apt-get -qy install docker-ce docker-ce-cli containerd.io
   systemctl enable docker
   # enable memory limit and swap accounting
   sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"/g' /etc/default/grub
@@ -217,8 +211,8 @@ then
 fi
 
 
-# clean up apt packages
-echo " → Cleaning up apt packages"
+# clean up packages
+echo " → Cleaning up packages"
 apt-get -qy autoremove
 apt-get -qy clean
 
